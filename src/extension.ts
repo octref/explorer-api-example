@@ -4,11 +4,16 @@
 import * as vscode from 'vscode';
 import { TreeContentProvider, ITreeNode } from 'vscode';
 
+import * as fs from 'fs';
+import * as path from 'path';
+import * as _ from 'lodash';
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  const rootPath = vscode.workspace.rootPath;
 
-  vscode.workspace.registerTreeContentProvider('pineTree', new PineTreeContentProvider());
+  vscode.workspace.registerTreeContentProvider('pineTree', new PineTreeContentProvider(rootPath));
 }
 
 // this method is called when your extension is deactivated
@@ -16,13 +21,15 @@ export function deactivate() {
 }
 
 class PineTreeContentProvider implements vscode.TreeContentProvider {
+  private tree: TreeViewNode;
 
-  constructor() {
+  constructor(rootPath: string) {
+    this.tree = getTree(rootPath);
   }
 
   provideTreeContent(): Thenable<ITreeNode> {
     return new Promise((resolve, reject) => {
-      resolve(getTree());
+      resolve(this.tree);
     })
   }
 }
@@ -46,42 +53,23 @@ class TreeViewNode implements ITreeNode {
   }
 }
 
+function getTree(rootPath: string): TreeViewNode {
+  const root = new TreeViewNode('root');
 
-function getTree(): TreeViewNode {
-	const root   = randomNode();
-  const node1  = randomNode();
-  const node2  = randomNode();
-  const node11 = randomNode();
+  const items = fs.readdirSync(path.join(rootPath, 'node_modules'));
+ 
+  items.forEach(item => {
+    if (!item.startsWith('.') && !item.startsWith('@')) {
+      const packageJson = JSON.parse(fs.readFileSync(path.join(rootPath, 'node_modules', item, 'package.json'), 'utf-8'));
 
-  root.addChild(node1);
-  root.addChild(node2);
-  node1.addChild(node11);
+      const node = new TreeViewNode(item + ' ' + packageJson.version);
+      root.addChild(node);
 
-  for (let i = 0; i < randomInt(20); i++) {
-    root.addChild(randomNode());
-  }
+      _.forEach(packageJson.dependencies, (ver, dep) => {
+        node.addChild(new TreeViewNode(dep + ' ' + ver));
+      });
+    }
+  });
 
-  for (let i = 0; i < randomInt(20); i++) {
-    node1.addChild(randomNode());
-  }
-
-  for (let i = 0; i < randomInt(20); i++) {
-    node2.addChild(randomNode());
-  }
-
-  for (let i = 0; i < randomInt(20); i++) {
-    node11.addChild(randomNode());
-  }
-
-	return root;
-}
-
-function randomNode() {
-  const digit = 5 + randomInt(5); 
-  const label = Math.random().toString(36).substring(2, 2 + digit);
-  return new TreeViewNode(label);
-}
-
-function randomInt(top: number) {
-  return Math.floor(Math.random() * top);
+  return root;
 }
