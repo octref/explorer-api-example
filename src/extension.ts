@@ -7,13 +7,14 @@ import { TreeContentProvider, ITreeNode } from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
+import * as request from 'request';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   const rootPath = vscode.workspace.rootPath;
 
-  vscode.workspace.registerTreeContentProvider('pineTree', new PineTreeContentProvider(rootPath));
+  vscode.workspace.registerTreeContentProvider('pineTree', new PineTreeContentProvider());
 }
 
 // this method is called when your extension is deactivated
@@ -21,10 +22,10 @@ export function deactivate() {
 }
 
 class PineTreeContentProvider implements vscode.TreeContentProvider {
-  private tree: TreeViewNode;
+  private tree: FollowerViewNode;
 
-  constructor(rootPath: string) {
-    this.tree = getTree(rootPath);
+  constructor() {
+    this.tree = new FollowerViewNode('octref');
   }
 
   provideTreeContent(): Thenable<ITreeNode> {
@@ -32,44 +33,50 @@ class PineTreeContentProvider implements vscode.TreeContentProvider {
       resolve(this.tree);
     })
   }
-}
 
-class TreeViewNode implements ITreeNode {
-  label: string;
-  isExpanded: boolean;
-  children: vscode.ITreeNode[];
-
-  constructor(
-    label: string,
-    isExpanded: boolean = true,
-    children: vscode.ITreeNode[] = []) {
-    this.label = label;
-    this.isExpanded = isExpanded;
-    this.children = children;
-  }
-
-  addChild(child: vscode.ITreeNode) {
-    this.children.push(child);
-  }
-}
-
-function getTree(rootPath: string): TreeViewNode {
-  const root = new TreeViewNode('root');
-
-  const items = fs.readdirSync(path.join(rootPath, 'node_modules'));
- 
-  items.forEach(item => {
-    if (!item.startsWith('.') && !item.startsWith('@')) {
-      const packageJson = JSON.parse(fs.readFileSync(path.join(rootPath, 'node_modules', item, 'package.json'), 'utf-8'));
-
-      const node = new TreeViewNode(item + ' ' + packageJson.version);
-      root.addChild(node);
-
-      _.forEach(packageJson.dependencies, (ver, dep) => {
-        node.addChild(new TreeViewNode(dep + ' ' + ver));
+  resolveChildren(node: ITreeNode): Thenable<ITreeNode[]> {
+    return new Promise((resolve, reject) => {
+      var fNode = new FollowerViewNode(node.label);
+      fNode.resolveChildren().then(followers => {
+        resolve(followers);
       });
-    }
-  });
+    });
+  }
+}
 
-  return root;
+class FollowerViewNode implements ITreeNode {
+  constructor(
+    public label: string,
+    public isExpanded: boolean = true,
+    public children: vscode.ITreeNode[] = [],
+    public isChildrenResolved: boolean = false) {
+  }
+
+  private getFollowers(login: string): Thenable<FollowerViewNode[]> {
+    const options = {
+      url: `https://api.github.com/users/${login}/followers`,
+      headers: {
+        'User-Agent': 'pine'
+      }
+    };
+
+    return new Promise((resolve, reject) => {
+      request(options, (err, res, body) => {
+        const followers = JSON.parse(body);
+        resolve(followers.map(follower => {
+          return new FollowerViewNode(follower.login);
+        }));
+      })
+    });
+  }
+
+  resolveChildren(): Thenable<FollowerViewNode[]> {
+    return new Promise((resolve, reject) => {
+      this.getFollowers(this.label).then(followers => {
+        this.children = followers;
+        this.isChildrenResolved = true;
+        resolve(followers);
+      });
+    });
+  }
 }
