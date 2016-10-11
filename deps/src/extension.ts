@@ -2,7 +2,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { TreeContentProvider, ITreeNode } from 'vscode';
+import { TreeExplorerNodeProvider, TreeExplorerNode } from 'vscode';
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -13,63 +13,67 @@ import * as _ from 'lodash';
 export function activate(context: vscode.ExtensionContext) {
   const rootPath = vscode.workspace.rootPath;
 
-  vscode.workspace.registerTreeContentProvider('pineTree', new PineTreeContentProvider(rootPath));
+  vscode.workspace.registerTreeExplorerNodeProvider('pineTree', new DepNodeProvider(rootPath));
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
 }
 
-class PineTreeContentProvider implements vscode.TreeContentProvider {
-  private tree: TreeViewNode;
-
-  constructor(rootPath: string) {
-    this.tree = getTree(rootPath);
+class DepNodeProvider implements TreeExplorerNodeProvider {
+  constructor(public workspaceRoot: string) {
+    
   }
 
-  provideTreeContent(): Thenable<ITreeNode> {
+  provideRootNode(): Thenable<DepNode> {
+    const root = this.workspaceRoot;
     return new Promise((resolve, reject) => {
-      resolve(this.tree);
+      resolve(new DepNode('root', root));
     })
   }
-}
-
-class TreeViewNode implements ITreeNode {
-  label: string;
-  isExpanded: boolean;
-  children: vscode.ITreeNode[];
-
-  constructor(
-    label: string,
-    isExpanded: boolean = true,
-    children: vscode.ITreeNode[] = []) {
-    this.label = label;
-    this.isExpanded = isExpanded;
-    this.children = children;
-  }
-
-  addChild(child: vscode.ITreeNode) {
-    this.children.push(child);
-  }
-}
-
-function getTree(rootPath: string): TreeViewNode {
-  const root = new TreeViewNode('root');
-
-  const items = fs.readdirSync(path.join(rootPath, 'node_modules'));
- 
-  items.forEach(item => {
-    if (!item.startsWith('.') && !item.startsWith('@')) {
-      const packageJson = JSON.parse(fs.readFileSync(path.join(rootPath, 'node_modules', item, 'package.json'), 'utf-8'));
-
-      const node = new TreeViewNode(item + ' ' + packageJson.version);
-      root.addChild(node);
-
-      _.forEach(packageJson.dependencies, (ver, dep) => {
-        node.addChild(new TreeViewNode(dep + ' ' + ver));
+  
+  resolveChildren(node: DepNode): Thenable<DepNode[]> {
+    return new Promise((resolve, reject) => {
+      // Virtual dep
+      // Todo: acces package.json on npm and get deps
+      if (!node.rootPath) {
+        return resolve([]);
+      }
+      
+      const nodeModulesPath = path.join(node.rootPath, 'node_modules');
+      fs.access(nodeModulesPath, fs.F_OK, (err) => {
+        // No node_modules, just read deps in package.json
+        if (err) {
+          const packageJson = JSON.parse(fs.readFileSync(path.join(node.rootPath, 'package.json'), 'utf-8'));
+          const deps = _.map(packageJson.dependencies, (ver, dep) => {
+            return new DepNode(dep + ' ' + ver, null);
+          });
+          return resolve(deps);
+        // Has node_modules, read each folder in it as dep
+        } else {
+          const result = [];
+          const deps = fs.readdirSync(nodeModulesPath);
+          deps.forEach((dep) => {
+            if (!dep.startsWith('.') && !dep.startsWith('@')) {
+              const depRootPath = path.join(nodeModulesPath, dep);
+              const packageJson = JSON.parse(fs.readFileSync(path.join(depRootPath, 'package.json'), 'utf-8'));
+              result.push(new DepNode(dep + ' ' + packageJson.version, depRootPath));
+            }
+          });
+          return resolve(result);
+        }
       });
-    }
-  });
 
-  return root;
+    });
+  }
+}
+
+class DepNode implements TreeExplorerNode {
+  constructor(
+    public label: string,
+    public rootPath: string,
+    public shouldInitiallyExpand: boolean = true,
+    public onClickCommand: string = null
+  ) {
+  }
 }

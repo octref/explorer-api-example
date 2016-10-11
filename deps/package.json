@@ -23,6 +23,7 @@
     ],
     "explorer": {
       "treeContentProviderId": "pineTree",
+      "treeLabel": "Deps Tree!",
       "icon": "media/pineTree.svg"
     }
   },
