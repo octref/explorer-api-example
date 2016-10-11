@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
 import * as request from 'request';
+import GH_TOKEN from './token';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -39,7 +40,7 @@ class PineTreeExplorerNodeProvider implements TreeExplorerNodeProvider {
       url: `https://api.github.com/users/${node.login}/followers`,
       headers: {
         'User-Agent': 'pine',
-        'Authorization': 'token 9bbe8c7b62f3158f58f1339476cea116aeee9b16'
+        'Authorization': GH_TOKEN
       }
     };
 
