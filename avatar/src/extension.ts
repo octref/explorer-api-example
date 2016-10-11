@@ -2,7 +2,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { TreeContentProvider, TreeContentNode } from 'vscode';
+import { TreeExplorerNodeProvider, TreeExplorerNode } from 'vscode';
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -14,69 +14,53 @@ import * as request from 'request';
 export function activate(context: vscode.ExtensionContext) {
   const rootPath = vscode.workspace.rootPath;
 
-  vscode.workspace.registerTreeContentProvider('pineTree', new PineTreeContentProvider());
+  vscode.workspace.registerTreeExplorerNodeProvider('pineTree', new PineTreeExplorerNodeProvider());
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
 }
 
-class PineTreeContentProvider implements vscode.TreeContentProvider {
+class PineTreeExplorerNodeProvider implements TreeExplorerNodeProvider {
   private tree: FollowerViewNode;
 
   constructor() {
     this.tree = new FollowerViewNode('octref');
   }
 
-  provideTreeContent(): Thenable<TreeContentNode> {
+  provideRootNode(): Thenable<FollowerViewNode> {
     return new Promise((resolve, reject) => {
       resolve(this.tree);
     })
   }
 
-  resolveChildren(node: TreeContentNode): Thenable<TreeContentNode[]> {
-    return new Promise((resolve, reject) => {
-      var fNode = new FollowerViewNode(node.label);
-      fNode.resolveChildren().then(followers => {
-        resolve(followers);
-      });
-    });
-  }
-}
-
-class FollowerViewNode implements TreeContentNode {
-  constructor(
-    public label: string,
-    public isExpanded: boolean = true,
-    public children: FollowerViewNode[] = [],
-    public isChildrenResolved: boolean = false) {
-  }
-
-  private getFollowers(login: string): Thenable<FollowerViewNode[]> {
+  resolveChildren(node: FollowerViewNode): Thenable<FollowerViewNode[]> {
     const options = {
-      url: `https://api.github.com/users/${login}/followers`,
+      url: `https://api.github.com/users/${node.login}/followers`,
       headers: {
-        'User-Agent': 'pine'
+        'User-Agent': 'pine',
+        'Authorization': 'token 9bbe8c7b62f3158f58f1339476cea116aeee9b16'
       }
     };
 
     return new Promise((resolve, reject) => {
       request(options, (err, res, body) => {
         const followers = JSON.parse(body);
-        resolve(followers.map(follower => {
-          return new FollowerViewNode(follower.login);
+        resolve(followers.map(f => {
+          return new FollowerViewNode(f.login);
         }));
-      })
-    });
-  }
-
-  resolveChildren(): Thenable<FollowerViewNode[]> {
-    return new Promise((resolve, reject) => {
-      this.getFollowers(this.label).then(followers => {
-        this.children = followers;
-        this.isChildrenResolved = true;
-        resolve(followers);
       });
     });
+  }
+}
+
+class FollowerViewNode implements TreeExplorerNode {
+  public login: string;
+
+  constructor(
+    public label: string,
+    public shouldInitiallyExpand: boolean = true
+  ) {
+    this.login = this.label;
   }
 }
