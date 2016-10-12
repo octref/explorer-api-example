@@ -49,7 +49,6 @@ class OutlineNodeProvider implements TreeExplorerNodeProvider {
       const children = node.tsNode.getChildren().map(child => {
         return new OutlineNode(ts.SyntaxKind[child.kind], child, this.source);
       });
-      const { line, character } = this.source.getLineAndCharacterOfPosition(node.tsNode.pos);
       return resolve(children);
     })
   }
