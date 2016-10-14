@@ -2,7 +2,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { TreeExplorerNodeProvider, TreeExplorerNode } from 'vscode';
+import { TreeExplorerNodeProvider } from 'vscode';
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -22,11 +22,19 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
 }
 
-class PineTreeExplorerNodeProvider implements TreeExplorerNodeProvider {
+class PineTreeExplorerNodeProvider<T extends FollowerViewNode> implements TreeExplorerNodeProvider<T> {
   private tree: FollowerViewNode;
 
   constructor() {
     this.tree = new FollowerViewNode('octref');
+  }
+  
+  getLabel(node: T) {
+    return node.login;
+  }
+  
+  getHasChildren(node: T) {
+    return true;
   }
 
   provideRootNode(): Thenable<FollowerViewNode> {
@@ -55,13 +63,10 @@ class PineTreeExplorerNodeProvider implements TreeExplorerNodeProvider {
   }
 }
 
-class FollowerViewNode implements TreeExplorerNode {
-  public login: string;
-
+class FollowerViewNode {
   constructor(
-    public label: string,
+    public login: string,
     public shouldInitiallyExpand: boolean = true
   ) {
-    this.login = this.label;
   }
 }
