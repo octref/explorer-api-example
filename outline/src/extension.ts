@@ -1,36 +1,42 @@
 'use strict';
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+
 import * as vscode from 'vscode';
-import { TreeExplorerNodeProvider, TreeExplorerNode } from 'vscode';
+import { TreeExplorerNodeProvider } from 'vscode';
 
 import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
 import * as ts from 'typescript';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   const activeFilePath = vscode.window.activeTextEditor.document.uri.fsPath;
 
   vscode.workspace.registerTreeExplorerNodeProvider('pineTree', new OutlineNodeProvider(activeFilePath));
 
-  const deco = vscode.window.createTextEditorDecorationType({
-    backgroundColor: 'steelblue'
+  const gotoDecoration = vscode.window.createTextEditorDecorationType({
+    backgroundColor: 'steelblue',
   });
-  vscode.commands.registerCommand('extension.outlineJump', (node) => {
+  const highlightDecoration = vscode.window.createTextEditorDecorationType({
+    backgroundColor: '#555',
+    isWholeLine: true
+  });
+
+  vscode.commands.registerCommand('extension.goto', (node) => {
     const range = (<OutlineNode>node).getRange();
     vscode.window.activeTextEditor.revealRange(range, 1);
-    vscode.window.activeTextEditor.setDecorations(deco, [range]);
+    vscode.window.activeTextEditor.setDecorations(gotoDecoration, [range]);
+  });
+  vscode.commands.registerCommand('extension.highlight', (node) => {
+    const range = (<OutlineNode>node).getRange();
+    vscode.window.activeTextEditor.revealRange(range, 1);
+    vscode.window.activeTextEditor.setDecorations(highlightDecoration, [range]);
   });
 }
 
-// this method is called when your extension is deactivated
 export function deactivate() {
 }
 
-class OutlineNodeProvider implements TreeExplorerNodeProvider {
+class OutlineNodeProvider<T extends OutlineNode> implements TreeExplorerNodeProvider<T> {
   source: ts.SourceFile;
 
   constructor(filePath: string) {
@@ -54,15 +60,18 @@ class OutlineNodeProvider implements TreeExplorerNodeProvider {
   }
 }
 
-class OutlineNode implements TreeExplorerNode {
+class OutlineNode {
+  clickCommand: string;
 
   constructor(
     public label: string,
     public tsNode: ts.Node,
     public tsSource: ts.SourceFile,
-    public onClickCommand: string = 'extension.outlineJump',
     public shouldInitiallyExpand: boolean = true
   ) {
+    this.clickCommand = tsNode.getChildCount() === 0
+                      ? 'extension.goto'
+                      : 'extension.highlight';
   }
 
   getRange(): vscode.Range {
