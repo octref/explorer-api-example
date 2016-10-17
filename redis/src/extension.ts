@@ -7,7 +7,19 @@ import * as IORedis from 'ioredis';
 export function activate(context: vscode.ExtensionContext) {
   
   vscode.workspace.registerTreeExplorerNodeProvider('pineTree', new RedisNodeProvider());
+  
+  vscode.commands.registerCommand('extension.redis', (node: RedisValueNode) => {
+    const uri = vscode.Uri.parse("redis://open/" + node.key);
+    vscode.workspace.openTextDocument(uri).then(doc => {
+      vscode.commands.executeCommand('vscode.open', uri);
+    });
+  });
 
+  vscode.workspace.registerTextDocumentContentProvider('redis', {
+    provideTextDocumentContent: (uri: vscode.Uri): string => {
+      return "haha";
+    }
+  });
 }
 
 export function deactivate() {
@@ -29,6 +41,13 @@ class RedisNodeProvider implements TreeExplorerNodeProvider<RedisNode> {
     return node.kind !== "value";
   }
   
+  getClickCommand(node: RedisNode): string {
+    if (node.kind === "value")
+      return "extension.redis";
+    else
+      return null;
+  }
+
   provideRootNode(): RedisRootNode {
     return new RedisRootNode();
   }
