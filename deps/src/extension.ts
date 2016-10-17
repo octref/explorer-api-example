@@ -24,20 +24,20 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
 }
 
-class DepNodeProvider<T extends DepNode> implements TreeExplorerNodeProvider<T> {
+class DepNodeProvider implements TreeExplorerNodeProvider<DepNode> {
   constructor(public workspaceRoot: string) {
     
   }
   
-  getLabel(node: T): string {
+  getLabel(node: DepNode): string {
     return node.name + ' ' + node.packageJson.version;
   }
   
-  getHasChildren(node: T): boolean {
+  getHasChildren(node: DepNode): boolean {
     return node.hasChildren;
   }
   
-  getClickCommand(node: T): string {
+  getClickCommand(node: DepNode): string {
     if (this.getHasChildren(node)) {
       return null;
     } else if (node.packageJson.homepage) {
