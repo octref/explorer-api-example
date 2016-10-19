@@ -15,25 +15,25 @@ import GH_TOKEN from './token';
 export function activate(context: vscode.ExtensionContext) {
   const rootPath = vscode.workspace.rootPath;
 
-  vscode.workspace.registerTreeExplorerNodeProvider('pineTree', new PineTreeExplorerNodeProvider());
+  vscode.workspace.registerTreeExplorerNodeProvider('avatarTree', new PineTreeExplorerNodeProvider());
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
 }
 
-class PineTreeExplorerNodeProvider<T extends FollowerViewNode> implements TreeExplorerNodeProvider<T> {
+class PineTreeExplorerNodeProvider implements TreeExplorerNodeProvider<FollowerViewNode> {
   private tree: FollowerViewNode;
 
   constructor() {
     this.tree = new FollowerViewNode('octref');
   }
   
-  getLabel(node: T) {
+  getLabel(node: FollowerViewNode) {
     return node.login;
   }
   
-  getHasChildren(node: T) {
+  getHasChildren(node: FollowerViewNode) {
     return true;
   }
 

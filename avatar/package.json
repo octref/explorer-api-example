@@ -22,8 +22,8 @@
       }
     ],
     "explorer": {
-      "treeExplorerNodeProviderId": "pineTree",
-      "treeLabel": "Pine Tree!!",
+      "treeExplorerNodeProviderId": "avatarTree",
+      "treeLabel": "Avatar Tree!",
       "icon": "media/pineTree.svg"
     }
   },
