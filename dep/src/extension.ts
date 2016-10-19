@@ -1,6 +1,5 @@
 'use strict';
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+
 import * as vscode from 'vscode';
 import { TreeExplorerNodeProvider } from 'vscode';
 
@@ -52,6 +51,21 @@ class DepNodeProvider implements TreeExplorerNodeProvider<DepNode> {
     return new Root();
   }
   
+  resolveChildren(node: DepNode): Thenable<DepNode[]> {
+    return new Promise((resolve, reject) => {
+      switch(node.kind) {
+        case 'root':
+          resolve(this.getDepsInPackageJson(path.join(this.workspaceRoot, 'package.json')));
+          break;
+        case 'node':
+          resolve(this.getDepsInPackageJson(path.join(this.workspaceRoot, 'node_modules', node.moduleName, 'package.json')));
+          break;
+        case 'leaf':
+          resolve([]);
+      }
+    });
+  }
+  
   private getDepsInPackageJson(filePath: string): DepNode[] {
     const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     
@@ -73,21 +87,6 @@ class DepNodeProvider implements TreeExplorerNodeProvider<DepNode> {
     });
 
     return deps.concat(devDeps);
-  }
-  
-  resolveChildren(node: DepNode): Thenable<DepNode[]> {
-    return new Promise((resolve, reject) => {
-      switch(node.kind) {
-        case 'root':
-          resolve(this.getDepsInPackageJson(path.join(this.workspaceRoot, 'package.json')));
-          break;
-        case 'node':
-          resolve(this.getDepsInPackageJson(path.join(this.workspaceRoot, 'node_modules', node.moduleName, 'package.json')));
-          break;
-        case 'leaf':
-          resolve([]);
-      }
-    });
   }
 }
 
