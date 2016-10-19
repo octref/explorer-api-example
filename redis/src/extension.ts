@@ -6,7 +6,7 @@ import * as IORedis from 'ioredis';
 
 export function activate(context: vscode.ExtensionContext) {
   
-  vscode.workspace.registerTreeExplorerNodeProvider('pineTree', new RedisNodeProvider());
+  vscode.workspace.registerTreeExplorerNodeProvider('redisTree', new RedisNodeProvider());
   
   vscode.commands.registerCommand('extension.redis', (node: RedisValueNode) => {
     const uri = vscode.Uri.parse("redis://open/" + node.key);
