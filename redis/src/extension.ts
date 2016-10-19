@@ -5,11 +5,11 @@ import { TreeExplorerNodeProvider } from 'vscode';
 import * as IORedis from 'ioredis';
 
 export function activate(context: vscode.ExtensionContext) {
-  
+
   vscode.workspace.registerTreeExplorerNodeProvider('redisTree', new RedisNodeProvider());
   
   vscode.commands.registerCommand('extension.redis', (node: RedisValueNode) => {
-    const uri = vscode.Uri.parse("redis://open/" + node.key);
+    const uri = vscode.Uri.parse("redis://open/" + node.value);
     vscode.workspace.openTextDocument(uri).then(doc => {
       vscode.commands.executeCommand('vscode.open', uri);
     });
@@ -17,7 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.workspace.registerTextDocumentContentProvider('redis', {
     provideTextDocumentContent: (uri: vscode.Uri): string => {
-      return "haha";
+      return uri.path.slice(1);
     }
   });
 }
@@ -42,8 +42,12 @@ class RedisNodeProvider implements TreeExplorerNodeProvider<RedisNode> {
   }
   
   getClickCommand(node: RedisNode): string {
-    if (node.kind === "value")
+    if (node.kind === "value"){
+      this.redis.get(node.key, (err, value) => {
+        node.value = value;
+      });
       return "extension.redis";
+    }
     else
       return null;
   }
@@ -107,6 +111,7 @@ class RedisDBNode {
 class RedisValueNode {
   kind: "value" = "value";
   get label() { return this.key }
+  value: string;
   
   constructor(
     public key: string
