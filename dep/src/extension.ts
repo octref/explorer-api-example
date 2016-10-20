@@ -67,26 +67,32 @@ class DepNodeProvider implements TreeExplorerNodeProvider<DepNode> {
   }
   
   private getDepsInPackageJson(filePath: string): DepNode[] {
-    const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    
-    const deps = Object.keys(packageJson.dependencies).map(d => {
-      try {
-        fs.accessSync(path.join(this.workspaceRoot, 'node_modules', d));
-        return new Node(d);
-      } catch (err) {
-        return new Leaf(d);
-      }
-    });
-    const devDeps = Object.keys(packageJson.devDependencies).map(d => {
-      try {
-        fs.accessSync(path.join(this.workspaceRoot, 'node_modules', d));
-        return new Node(d);
-      } catch (err) {
-        return new Leaf(d);
-      }
-    });
+    try {
+      fs.accessSync(filePath);
 
-    return deps.concat(devDeps);
+      const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    
+      const deps = Object.keys(packageJson.dependencies).map(d => {
+        try {
+          fs.accessSync(path.join(this.workspaceRoot, 'node_modules', d));
+          return new Node(d);
+        } catch (err) {
+          return new Leaf(d);
+        }
+      });
+      const devDeps = Object.keys(packageJson.devDependencies).map(d => {
+        try {
+          fs.accessSync(path.join(this.workspaceRoot, 'node_modules', d));
+          return new Node(d);
+        } catch (err) {
+          return new Leaf(d);
+        }
+      });
+
+      return deps.concat(devDeps);
+    } catch (err) { // No package.json at root
+      return [];
+    }
   }
 }
 
