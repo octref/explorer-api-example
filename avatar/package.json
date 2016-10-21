@@ -15,12 +15,6 @@
   ],
   "main": "./out/src/extension",
   "contributes": {
-    "commands": [
-      {
-        "command": "extension.sayHello",
-        "title": "Hello World"
-      }
-    ],
     "explorer": {
       "treeExplorerNodeProviderId": "avatarTree",
       "treeLabel": "Avatar Tree!",
