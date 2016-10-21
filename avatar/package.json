@@ -24,7 +24,7 @@
     "explorer": {
       "treeExplorerNodeProviderId": "avatarTree",
       "treeLabel": "Avatar Tree!",
-      "icon": "media/pineTree.svg"
+      "icon": "media/gh.svg"
     }
   },
   "scripts": {
