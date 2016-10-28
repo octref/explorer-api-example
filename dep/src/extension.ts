@@ -11,8 +11,10 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.workspace.registerTreeExplorerNodeProvider('depTree', new DepNodeProvider(rootPath));
   
-  vscode.commands.registerCommand('extension.openPackageOnNpm', (node: Leaf) => {
-    vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`https://www.npmjs.com/package/${node.moduleName}`));
+  vscode.commands.registerCommand('extension.openPackageOnNpm', (node: DepNode) => {
+    if (node.kind === 'leaf') {
+      vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`https://www.npmjs.com/package/${node.moduleName}`));
+    }
   });
 }
 
