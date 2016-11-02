@@ -1,6 +1,6 @@
 {
   "name": "dep",
-  "displayName": "dep",
+  "displayName": "Dependency Example",
   "description": "Dependency example for VSCode's explorer API",
   "version": "0.0.1",
   "publisher": "octref",

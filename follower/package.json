@@ -1,6 +1,6 @@
 {
-  "name": "explorer-api-test",
-  "displayName": "explorer-api",
+  "name": "follower",
+  "displayName": "Follower Example",
   "description": "Follower example for VSCode's explorer API",
   "version": "0.0.1",
   "publisher": "octref",
