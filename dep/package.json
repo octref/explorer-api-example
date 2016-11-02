@@ -1,11 +1,11 @@
 {
   "name": "dep",
   "displayName": "dep",
-  "description": "",
+  "description": "Dependency example for VSCode's explorer API",
   "version": "0.0.1",
   "publisher": "octref",
   "engines": {
-    "vscode": "^1.5.0"
+    "vscode": "^1.7.0"
   },
   "enableProposedApi": true,
   "categories": [
@@ -30,8 +30,6 @@
   "devDependencies": {
     "typescript": "^2.0.3",
     "vscode": "^1.0.0",
-    "mocha": "^2.3.3",
-    "@types/node": "^6.0.40",
-    "@types/mocha": "^2.2.32"
+    "@types/node": "^6.0.40"
   }
 }
