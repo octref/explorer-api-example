@@ -1,11 +1,11 @@
 {
   "name": "redis",
-  "displayName": "redis",
-  "description": "",
+  "displayName": "Redis Example",
+  "description": "Redis example for VSCode's explorer API",
   "version": "0.0.1",
   "publisher": "octref",
   "engines": {
-    "vscode": "^1.5.0"
+    "vscode": "^1.7.0"
   },
   "enableProposedApi": true,
   "categories": [
@@ -15,6 +15,7 @@
     "*"
   ],
   "main": "./out/src/extension",
+  "icon": "media/redis.png",
   "contributes": {
     "explorer": {
       "treeExplorerNodeProviderId": "redisTree",
@@ -29,9 +30,7 @@
   },
   "devDependencies": {
     "@types/ioredis": "0.0.20",
-    "@types/mocha": "^2.2.32",
     "@types/node": "^6.0.40",
-    "mocha": "^2.3.3",
     "typescript": "^2.0.3",
     "vscode": "^1.0.0"
   },

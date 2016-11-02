@@ -8,10 +8,15 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.workspace.registerTreeExplorerNodeProvider('redisTree', new RedisNodeProvider());
   
-  vscode.commands.registerCommand('extension.redis', (node: RedisValueNode) => {
-    const uri = vscode.Uri.parse("redis://open/" + node.value);
-    vscode.workspace.openTextDocument(uri).then(doc => {
-      vscode.commands.executeCommand('vscode.open', uri);
+  vscode.commands.registerCommand('extension.redisGetVal', (node: KeyVal) => {
+    node.getVal().then(val => {
+      const uri = vscode.Uri.parse("redis://open/" + val);
+      // Load the virtual document
+      vscode.workspace.openTextDocument(uri).then(doc => {
+        // Open the virtual document in a tab
+        // Document content is provided by the `redis` TextDocumentContentProvider
+        vscode.commands.executeCommand('vscode.open', uri);
+      });
     });
   });
 
@@ -23,37 +28,36 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-
 }
 
 class RedisNodeProvider implements TreeExplorerNodeProvider<RedisNode> {
-  private redis: IORedis.Redis;
-  
-  constructor() {
-    this.redis = new IORedis();
-  }
   
   getLabel(node: RedisNode): string {
-    return node.label;
+    switch (node.kind) {
+      case "root":
+        return "root";
+      case "db":
+        return "DB " + node.index;
+      case "keyval":
+        return node.key;
+    }
   }
   
   getHasChildren(node: RedisNode): boolean {
-    return node.kind !== "value";
+    return node.kind !== "keyval";
   }
   
   getClickCommand(node: RedisNode): string {
-    if (node.kind === "value"){
-      this.redis.get(node.key, (err, value) => {
-        node.value = value;
-      });
-      return "extension.redis";
+    if (node.kind === "keyval"){
+      return "extension.redisGetVal";
     }
-    else
+    else {
       return null;
+    }
   }
 
-  provideRootNode(): RedisRootNode {
-    return new RedisRootNode();
+  provideRootNode(): Root {
+    return new Root();
   }
   
   resolveChildren(node: RedisNode): Thenable<RedisNode[]> {
@@ -62,16 +66,17 @@ class RedisNodeProvider implements TreeExplorerNodeProvider<RedisNode> {
         case "root":
           return resolve(this.getAllDBNodes());
         case "db":
-          this.redis.select(node.index, () => {
-            this.redis.keys('*', (err, keys: string[]) => {
+          const redis = new IORedis();
+          redis.select(node.index, () => {
+            redis.keys('*', (err, keys: string[]) => {
               if (err) resolve([]);
               resolve(keys.map(key => {
-                return new RedisValueNode(key);
+                return new KeyVal(key);
               }));
             });
           });
           return;
-        case "value":
+        case "keyval":
           return resolve([]);
       }
     });
@@ -80,25 +85,23 @@ class RedisNodeProvider implements TreeExplorerNodeProvider<RedisNode> {
   
   private getAllDBNodes() {
     return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(index => {
-      return new RedisDBNode(index);
+      return new DB(index);
     });
   }
 }
 
-type RedisNode = RedisRootNode | RedisDBNode | RedisValueNode;
+type RedisNode = Root | DB | KeyVal;
 
-class RedisRootNode {
+class Root {
   kind: "root" = "root";
-  label: string = "root";
   
   constructor(
   ) {
   }
 }
 
-class RedisDBNode {
+class DB {
   kind: "db" = "db";
-  get label() { return "db " + this.index }
   
   constructor(
     public index: number
@@ -108,14 +111,22 @@ class RedisDBNode {
 
 }
 
-class RedisValueNode {
-  kind: "value" = "value";
-  get label() { return this.key }
-  value: string;
+class KeyVal {
+  kind: "keyval" = "keyval";
   
   constructor(
     public key: string
   ) {
 
+  }
+
+  getVal(): Thenable<string> {
+    const redis = new IORedis();
+
+    return new Promise((resolve) => {
+      redis.get(this.key, (err, value) => {
+        resolve(value);
+      });
+    });
   }
 }
