@@ -1,11 +1,11 @@
 {
   "name": "explorer-api-test",
   "displayName": "explorer-api",
-  "description": "",
+  "description": "Follower example for VSCode's explorer API",
   "version": "0.0.1",
   "publisher": "octref",
   "engines": {
-    "vscode": "^1.0.0"
+    "vscode": "^1.7.0"
   },
   "enableProposedApi": true,
   "categories": [
@@ -15,11 +15,12 @@
     "*"
   ],
   "main": "./out/src/extension",
+  "icon": "media/octocat.png",
   "contributes": {
     "explorer": {
-      "treeExplorerNodeProviderId": "avatarTree",
-      "treeLabel": "Avatar Tree!",
-      "icon": "media/gh.svg"
+      "treeExplorerNodeProviderId": "followerTree",
+      "treeLabel": "GitHub Follower Tree!",
+      "icon": "media/octocat.svg"
     }
   },
   "scripts": {
