@@ -10,7 +10,7 @@ import * as request from 'request';
 import GH_TOKEN from './token';
 
 export function activate(context: vscode.ExtensionContext) {
-  vscode.workspace.registerTreeExplorerNodeProvider('followerTree', new FollowerNodeProvider('octref'));
+  vscode.window.registerTreeExplorerNodeProvider('followerTree', new FollowerNodeProvider('octref'));
 }
 
 export function deactivate() {
@@ -19,14 +19,14 @@ export function deactivate() {
 class FollowerNodeProvider implements TreeExplorerNodeProvider<FollowerNode> {
 
   constructor(
-    public rootLogin: string 
+    public rootLogin: string
   ) {
   }
-  
+
   getLabel(node: FollowerNode) {
     return node.login;
   }
-  
+
   getHasChildren(node: FollowerNode) {
     return true;
   }
