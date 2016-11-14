@@ -6,7 +6,7 @@ import * as IORedis from 'ioredis';
 
 export function activate(context: vscode.ExtensionContext) {
 
-  vscode.workspace.registerTreeExplorerNodeProvider('redisTree', new RedisNodeProvider());
+  vscode.window.registerTreeExplorerNodeProvider('redisTree', new RedisNodeProvider());
   
   vscode.commands.registerCommand('extension.redisGetVal', (node: KeyVal) => {
     node.getVal().then(val => {
