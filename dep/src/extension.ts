@@ -9,7 +9,7 @@ import * as path from 'path';
 export function activate(context: vscode.ExtensionContext) {
   const rootPath = vscode.workspace.rootPath;
 
-  vscode.workspace.registerTreeExplorerNodeProvider('depTree', new DepNodeProvider(rootPath));
+  vscode.window.registerTreeExplorerNodeProvider('depTree', new DepNodeProvider(rootPath));
   
   vscode.commands.registerCommand('extension.openPackageOnNpm', (node: DepNode) => {
     if (node.kind === 'leaf') {
