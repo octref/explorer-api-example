@@ -6,6 +6,8 @@ See details in https://github.com/Microsoft/vscode/pull/14048
 
 ### Dependency Explorer
 
+This is a reference sample. Now lives at https://github.com/Microsoft/vscode-extension-samples/tree/master/tree-explorer-sample
+
 ![](assets/deps.png)
 
 ### GitHub Follower Explorer
