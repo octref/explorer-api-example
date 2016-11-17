@@ -13,9 +13,6 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.window.registerTreeExplorerNodeProvider('followerTree', new FollowerNodeProvider('octref'));
 }
 
-export function deactivate() {
-}
-
 class FollowerNodeProvider implements TreeExplorerNodeProvider<FollowerNode> {
 
   constructor(
