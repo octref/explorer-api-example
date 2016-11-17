@@ -27,9 +27,6 @@ export function activate(context: vscode.ExtensionContext) {
   });
 }
 
-export function deactivate() {
-}
-
 class RedisNodeProvider implements TreeExplorerNodeProvider<RedisNode> {
   
   getLabel(node: RedisNode): string {
